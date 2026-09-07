@@ -10,8 +10,8 @@ TEST(NodeIdGenerator, GeneratesSequentialIdsFromZero) {
 
 TEST(NodeIdGenerator, ReusesFreedId) {
   NodeIdGenerator gen;
-  const uint16_t a = gen.generateId();
-  const uint16_t b = gen.generateId();
+  const uint32_t a = gen.generateId();
+  const uint32_t b = gen.generateId();
   (void)a;
 
   gen.freeId(b);
@@ -21,7 +21,7 @@ TEST(NodeIdGenerator, ReusesFreedId) {
 TEST(NodeIdGenerator, ContinuesAfterReuse) {
   NodeIdGenerator gen;
   gen.generateId();
-  const uint16_t one = gen.generateId();
+  const uint32_t one = gen.generateId();
   gen.freeId(one);
   EXPECT_EQ(gen.generateId(), one);
   EXPECT_EQ(gen.generateId(), 2);
