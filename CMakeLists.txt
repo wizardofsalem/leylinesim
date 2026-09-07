@@ -15,6 +15,9 @@ endif()
 
 set(LEYLINE_WARNINGS -Wall -Wextra -Wpedantic)
 
+# Build unit tests (on by default; turn off with -DLEYLINE_BUILD_TESTS=OFF).
+option(LEYLINE_BUILD_TESTS "Build unit tests" ON)
+
 add_executable(leyexe)
 target_sources(leyexe
   PRIVATE
@@ -28,6 +31,7 @@ target_sources(leylib
   ./leylib/LeyGraph.cpp
   ./leylib/LeySource.cpp
   ./leylib/FlowRndGenerator.cpp
+  ./leylib/NodeIdGenerator.cpp
 
   PUBLIC
   FILE_SET leylibheaders
@@ -38,6 +42,7 @@ target_sources(leylib
     ./leylib/include/leylib/LeyGraph.h
     ./leylib/include/leylib/LeySource.h
     ./leylib/include/leylib/FlowRndGenerator.h
+    ./leylib/include/leylib/NodeIdGenerator.h
 )
 
 target_link_libraries(leyexe
@@ -47,3 +52,8 @@ leylib
 
 target_compile_options(leyexe  PRIVATE ${LEYLINE_WARNINGS})
 target_compile_options(leylib  PRIVATE ${LEYLINE_WARNINGS})
+
+if(LEYLINE_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
