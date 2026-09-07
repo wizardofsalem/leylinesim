@@ -10,7 +10,7 @@ public:
 
   ~FlowRndGenerator() = default;
 
-  double next();
+  float next();
 
   double mean() const;
   double stddev() const;
