@@ -10,7 +10,10 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(leylib_tests
   NodeIdGeneratorTest.cpp
-  FlowTests.cpp
+  GraphGenerationTest.cpp
+  EdgeTest.cpp
+  NodeOpsTest.cpp
+  FlowTest.cpp
 )
 
 target_link_libraries(leylib_tests

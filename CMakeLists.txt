@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.31)
 
 project(leylinesim)
 
-set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
@@ -15,7 +14,6 @@ endif()
 
 set(LEYLINE_WARNINGS -Wall -Wextra -Wpedantic)
 
-# Build unit tests (on by default; turn off with -DLEYLINE_BUILD_TESTS=OFF).
 option(LEYLINE_BUILD_TESTS "Build unit tests" ON)
 
 add_executable(leyexe)
@@ -27,9 +25,7 @@ target_sources(leyexe
 add_library(leylib)
 target_sources(leylib
   PRIVATE
-  ./leylib/LeyNode.cpp
   ./leylib/LeyGraph.cpp
-  ./leylib/LeySource.cpp
   ./leylib/FlowRndGenerator.cpp
   ./leylib/NodeIdGenerator.cpp
 
@@ -39,8 +35,9 @@ target_sources(leylib
   BASE_DIRS ./leylib/include/
   FILES
     ./leylib/include/leylib/LeyNode.h
+    ./leylib/include/leylib/LeyLine.h
     ./leylib/include/leylib/LeyGraph.h
-    ./leylib/include/leylib/LeySource.h
+    ./leylib/include/leylib/NodeHandle.h
     ./leylib/include/leylib/FlowRndGenerator.h
     ./leylib/include/leylib/NodeIdGenerator.h
 )
@@ -49,6 +46,8 @@ target_link_libraries(leyexe
 PRIVATE
 leylib
 )
+
+target_compile_features(leylib PUBLIC cxx_std_20)
 
 target_compile_options(leyexe  PRIVATE ${LEYLINE_WARNINGS})
 target_compile_options(leylib  PRIVATE ${LEYLINE_WARNINGS})
