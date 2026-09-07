@@ -16,6 +16,8 @@ set(LEYLINE_WARNINGS -Wall -Wextra -Wpedantic)
 
 option(LEYLINE_BUILD_TESTS "Build unit tests" ON)
 
+option(LEYLINE_BUILD_BENCHMARKS "Build benchmarks" OFF)
+
 add_executable(leyexe)
 target_sources(leyexe
   PRIVATE
@@ -55,4 +57,8 @@ target_compile_options(leylib  PRIVATE ${LEYLINE_WARNINGS})
 if(LEYLINE_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
+endif()
+
+if(LEYLINE_BUILD_BENCHMARKS)
+  add_subdirectory(benchmarks)
 endif()

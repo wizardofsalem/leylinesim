@@ -9,10 +9,11 @@
     {
       "name": "debug",
       "displayName": "Debug",
-      "description": "Debug build with symbols, no optimization",
+      "description": "Debug build with symbols, no optimization; all targets (tests + benchmarks) so it is the full clangd compilation database",
       "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
+        "LEYLINE_BUILD_BENCHMARKS": "ON",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
@@ -25,6 +26,18 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
+    },
+    {
+      "name": "bench",
+      "displayName": "Benchmarks",
+      "description": "Optimized build with Google Benchmark targets enabled",
+      "binaryDir": "${sourceDir}/build/bench",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "LEYLINE_BUILD_BENCHMARKS": "ON",
+        "LEYLINE_BUILD_TESTS": "OFF",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -35,6 +48,10 @@
     {
       "name": "release",
       "configurePreset": "release"
+    },
+    {
+      "name": "bench",
+      "configurePreset": "bench"
     }
   ],
   "testPresets": [
