@@ -6,7 +6,7 @@ FlowRndGenerator::FlowRndGenerator(double mean, double stddev)
 FlowRndGenerator::FlowRndGenerator(double mean, double stddev, uint32_t seed)
     : engine_(seed), dist_(mean, stddev) {}
 
-double FlowRndGenerator::next() { return dist_(engine_); }
+float FlowRndGenerator::next() { return dist_(engine_); }
 
 double FlowRndGenerator::mean() const { return dist_.mean(); }
 
