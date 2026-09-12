@@ -1,6 +1,9 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <leylib/LeyID.h>
+#include <memory>
+#include <set>
 #include <vector>
 
 #include <leylib/LeyLine.h>
@@ -9,19 +12,27 @@
 
 class FlowRndGenerator;
 
+struct FlowComparator {
+  bool operator()(const LeyNode *const nodeA, const LeyNode *const nodeB) const {
+    if (nodeA->supply != nodeB->supply) {
+      return nodeA->supply < nodeB->supply;
+    }
+    return nodeA->handle.id < nodeB->handle.id;
+  }
+};
+
 class LeyGraph {
 public:
-  LeyGraph() = delete;
-  LeyGraph(size_t initialSize, uint32_t seed);
+  LeyGraph(uint32_t seed);
   ~LeyGraph();
 
-  uint32_t addLine(uint32_t nodeA, uint32_t nodeB, float capacity);
-  uint32_t addTerminal(uint32_t node, float capacity);
-  void removeLine(uint32_t lineIndex);
+  LeyID addLine(LeyID nodeA, LeyID nodeB, float capacity);
+  LeyID addTerminal(LeyID node, float capacity);
+  void removeLine(LeyID lineIndex);
 
-  uint32_t addNode(float supply);
-  void removeNode(uint32_t nodeIndex);
-  uint32_t splitLine(uint32_t lineIndex, float supply);
+  LeyID addNode(float supply);
+  void removeNode(LeyID nodeIndex);
+  LeyID splitLine(LeyID lineIndex, float supply);
 
   void solveFlow();
 
@@ -29,15 +40,19 @@ public:
   const std::vector<LeyNode> &nodes() const { return graph_; }
   const std::vector<LeyLine> &lines() const { return edges_; }
 
-  size_t degree(uint32_t nodeIndex) const;
+  size_t degree(LeyID nodeIndex) const;
+
+protected:
+  LeyGraph();
 
 private:
   void generateSourceTrees(size_t treeCount, FlowRndGenerator &flowGenerator);
-  uint32_t allocLineSlot();
-  void detachLine(uint32_t nodeIndex, uint32_t lineIndex);
+  LeyID allocLineSlot();
+  void detachLine(LeyID nodeIndex, LeyID lineIndex);
 
   std::vector<LeyNode> graph_;
   std::vector<LeyLine> edges_;
-  std::vector<uint32_t> freeLines_; // reusable slots in edges_
-  NodeIdGenerator nodeIds_;         // slot allocator / free list for graph_
+  std::vector<LeyID> freeLines_; // reusable slots in edges_
+  NodeIdGenerator nodeIds_;      // slot allocator / free list for graph_
+  std::set<std::shared_ptr<LeyNode>, FlowComparator> sinkPriority_;
 };
