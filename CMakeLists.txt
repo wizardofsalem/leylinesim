@@ -21,27 +21,28 @@ option(LEYLINE_BUILD_BENCHMARKS "Build benchmarks" OFF)
 add_executable(leyexe)
 target_sources(leyexe
   PRIVATE
-./main.cpp
+  ./src/exe/main.cpp
 )
+target_include_directories(leyexe PRIVATE ./include/exe)
 
 add_library(leylib)
 target_sources(leylib
   PRIVATE
-  ./leylib/LeyGraph.cpp
-  ./leylib/FlowRndGenerator.cpp
-  ./leylib/NodeIdGenerator.cpp
+  ./src/lib/LeyGraph.cpp
+  ./src/lib/FlowRndGenerator.cpp
+  ./src/lib/NodeIdGenerator.cpp
 
   PUBLIC
   FILE_SET leylibheaders
   TYPE HEADERS
-  BASE_DIRS ./leylib/include/
+  BASE_DIRS ./include/lib/
   FILES
-    ./leylib/include/leylib/LeyNode.h
-    ./leylib/include/leylib/LeyLine.h
-    ./leylib/include/leylib/LeyGraph.h
-    ./leylib/include/leylib/NodeHandle.h
-    ./leylib/include/leylib/FlowRndGenerator.h
-    ./leylib/include/leylib/NodeIdGenerator.h
+    ./include/lib/leylib/LeyNode.h
+    ./include/lib/leylib/LeyLine.h
+    ./include/lib/leylib/LeyGraph.h
+    ./include/lib/leylib/NodeHandle.h
+    ./include/lib/leylib/FlowRndGenerator.h
+    ./include/lib/leylib/NodeIdGenerator.h
 )
 
 target_link_libraries(leyexe
