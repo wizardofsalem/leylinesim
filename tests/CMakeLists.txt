@@ -24,3 +24,6 @@ target_link_libraries(leylib_tests
 
 include(GoogleTest)
 gtest_discover_tests(leylib_tests)
+
+add_executable(leylib_flow_tests EXCLUDE_FROM_ALL FlowTest.cpp)
+target_link_libraries(leylib_flow_tests PRIVATE leylib GTest::gtest_main)

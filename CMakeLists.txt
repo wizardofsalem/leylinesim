@@ -37,6 +37,7 @@ target_sources(leylib
   TYPE HEADERS
   BASE_DIRS ./include/lib/
   FILES
+    ./include/lib/leylib/LeyID.h
     ./include/lib/leylib/LeyNode.h
     ./include/lib/leylib/LeyLine.h
     ./include/lib/leylib/LeyGraph.h

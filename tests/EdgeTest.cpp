@@ -1,3 +1,4 @@
+#include <leylib/LeyID.h>
 #include <gtest/gtest.h>
 
 #include <cstdint>
@@ -51,7 +52,7 @@ LeyGraph fourNodes() {
 TEST(Edges, AddLineLinksBothEndpoints) {
   LeyGraph graph = fourNodes();
 
-  const uint32_t line = graph.addLine(0, 2, 500.0f);
+  const LeyID line = graph.addLine(0, 2, 500.0f);
 
   EXPECT_EQ(graph.lines().size(), 1u);
   EXPECT_EQ(graph.degree(0), 1u);
@@ -68,7 +69,7 @@ TEST(Edges, AddLineLinksBothEndpoints) {
 TEST(Edges, AddTerminalLinksOneNode) {
   LeyGraph graph = fourNodes();
 
-  const uint32_t line = graph.addTerminal(1, 42.0f);
+  const LeyID line = graph.addTerminal(1, 42.0f);
 
   EXPECT_EQ(graph.degree(1), 1u);
   EXPECT_EQ(graph.degree(0), 0u);
@@ -79,7 +80,7 @@ TEST(Edges, AddTerminalLinksOneNode) {
 
 TEST(Edges, RemoveLineUnlinksBothEndpoints) {
   LeyGraph graph = fourNodes();
-  const uint32_t line = graph.addLine(0, 2, 500.0f);
+  const LeyID line = graph.addLine(0, 2, 500.0f);
   ASSERT_EQ(graph.degree(0), 1u);
 
   graph.removeLine(line);
@@ -91,7 +92,7 @@ TEST(Edges, RemoveLineUnlinksBothEndpoints) {
 
 TEST(Edges, RemoveTerminalUnlinksItsNode) {
   LeyGraph graph = fourNodes();
-  const uint32_t line = graph.addTerminal(1, 10.0f);
+  const LeyID line = graph.addTerminal(1, 10.0f);
 
   graph.removeLine(line);
 
@@ -101,9 +102,9 @@ TEST(Edges, RemoveTerminalUnlinksItsNode) {
 
 TEST(Edges, RemoveMiddleOfIncidentListKeepsTheRest) {
   LeyGraph graph = fourNodes();
-  const uint32_t a = graph.addLine(0, 1, 1.0f);
-  const uint32_t b = graph.addLine(0, 2, 2.0f);
-  const uint32_t c = graph.addLine(0, 3, 3.0f);
+  const LeyID a = graph.addLine(0, 1, 1.0f);
+  const LeyID b = graph.addLine(0, 2, 2.0f);
+  const LeyID c = graph.addLine(0, 3, 3.0f);
   (void)a;
   (void)c;
   ASSERT_EQ(graph.degree(0), 3u);
@@ -118,17 +119,17 @@ TEST(Edges, RemoveMiddleOfIncidentListKeepsTheRest) {
 
 TEST(Edges, RemovedLineSlotIsReused) {
   LeyGraph graph = fourNodes();
-  const uint32_t first = graph.addLine(0, 2, 1.0f);
+  const LeyID first = graph.addLine(0, 2, 1.0f);
   graph.removeLine(first);
 
-  const uint32_t second = graph.addLine(1, 3, 2.0f);
+  const LeyID second = graph.addLine(1, 3, 2.0f);
   EXPECT_EQ(second, first);
   EXPECT_TRUE(graph.lines()[second].alive);
 }
 
 TEST(Edges, RemoveLineIsIdempotent) {
   LeyGraph graph = fourNodes();
-  const uint32_t line = graph.addLine(0, 1, 1.0f);
+  const LeyID line = graph.addLine(0, 1, 1.0f);
   graph.removeLine(line);
   graph.removeLine(line); // must not corrupt the lists or double-free the slot
 

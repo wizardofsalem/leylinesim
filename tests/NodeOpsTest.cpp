@@ -1,3 +1,4 @@
+#include <leylib/LeyID.h>
 #include <gtest/gtest.h>
 
 #include <cstddef>
@@ -14,9 +15,9 @@ constexpr uint32_t kSeed = 7;
 
 // Count live lines incident to a node by walking lines() directly - an
 // independent check on LeyGraph::degree().
-size_t countIncident(const LeyGraph &g, uint32_t node) {
+size_t countIncident(const LeyGraph &g, LeyID node) {
   size_t n = 0;
-  for (uint32_t e = g.nodes()[node].firstIncident; e != kNoLine;
+  for (LeyID e = g.nodes()[node].firstIncident; e != kNoLine;
        e = g.lines()[e].nextIncident(node)) {
     ++n;
   }
@@ -28,7 +29,7 @@ size_t countIncident(const LeyGraph &g, uint32_t node) {
 
 TEST(NodeOps, AddNodeAppendsAnIsolatedNode) {
   LeyGraph graph(2, kSeed); // 2 source trees: nodes 0,1
-  const uint32_t idx = graph.addNode(123.0f);
+  const LeyID idx = graph.addNode(123.0f);
 
   EXPECT_EQ(idx, 2u);
   EXPECT_EQ(graph.size(), 3u);
@@ -67,10 +68,10 @@ TEST(NodeOps, RemoveNodeIsIdempotent) {
 
 TEST(NodeOps, RemoveHighDegreeNodeUnlinksEveryNeighbour) {
   LeyGraph graph(0, kSeed);
-  const uint32_t hub = graph.addNode(0.0f);
-  const uint32_t a = graph.addNode(0.0f);
-  const uint32_t b = graph.addNode(0.0f);
-  const uint32_t c = graph.addNode(0.0f);
+  const LeyID hub = graph.addNode(0.0f);
+  const LeyID a = graph.addNode(0.0f);
+  const LeyID b = graph.addNode(0.0f);
+  const LeyID c = graph.addNode(0.0f);
   graph.addLine(hub, a, 1.0f);
   graph.addLine(hub, b, 1.0f);
   graph.addLine(hub, c, 1.0f);
@@ -92,7 +93,7 @@ TEST(NodeOps, RemovedSlotIsRecycledWithPreservedGeneration) {
   LeyGraph graph(1, kSeed); // node 0
   graph.removeNode(0);
 
-  const uint32_t reused = graph.addNode(50.0f);
+  const LeyID reused = graph.addNode(50.0f);
 
   EXPECT_EQ(reused, 0u);
   EXPECT_EQ(graph.size(), 1u);
@@ -106,11 +107,11 @@ TEST(NodeOps, RemovedSlotIsRecycledWithPreservedGeneration) {
 
 TEST(NodeOps, SplitInternalLineInsertsNodeBetweenEndpoints) {
   LeyGraph graph(0, kSeed);
-  const uint32_t a = graph.addNode(0.0f);
-  const uint32_t b = graph.addNode(0.0f);
-  const uint32_t line = graph.addLine(a, b, 40.0f);
+  const LeyID a = graph.addNode(0.0f);
+  const LeyID b = graph.addNode(0.0f);
+  const LeyID line = graph.addLine(a, b, 40.0f);
 
-  const uint32_t mid = graph.splitLine(line, 0.0f);
+  const LeyID mid = graph.splitLine(line, 0.0f);
 
   EXPECT_EQ(graph.degree(a), 1u);
   EXPECT_EQ(graph.degree(b), 1u);
@@ -132,7 +133,7 @@ TEST(NodeOps, SplitTerminalLineKeepsTheTerminalOnTheNewNode) {
   LeyGraph graph(1, kSeed); // node 0 + terminal line 0
   const float cap = graph.lines()[0].capacity;
 
-  const uint32_t mid = graph.splitLine(0, -5.0f); // insert a sink
+  const LeyID mid = graph.splitLine(0, -5.0f); // insert a sink
 
   EXPECT_EQ(graph.degree(0), 1u);   // 0 -- mid
   EXPECT_EQ(graph.degree(mid), 2u); // mid -- (internal) + mid -- (terminal)
@@ -168,12 +169,12 @@ TEST(NodeOps, RandomAddRemoveKeepsStructureConsistent) {
   LeyGraph graph(4, 20240907u);
   std::mt19937 rng(123456u);
 
-  std::vector<uint32_t> live; // node indices we believe are alive
-  for (uint32_t i = 0; i < graph.size(); ++i) {
+  std::vector<LeyID> live; // node indices we believe are alive
+  for (LeyID i = 0; i < graph.size(); ++i) {
     live.push_back(i);
   }
 
-  auto pickLive = [&](std::mt19937 &r) -> uint32_t {
+  auto pickLive = [&](std::mt19937 &r) -> LeyID {
     return live[std::uniform_int_distribution<size_t>(0, live.size() - 1)(r)];
   };
   std::normal_distribution<float> supplyDist(0.0f, 500.0f);
@@ -185,7 +186,7 @@ TEST(NodeOps, RandomAddRemoveKeepsStructureConsistent) {
     if (roll < 4 || live.empty()) {
       // grow: attach a fresh node (with its own drain) to an existing one
       const float supply = supplyDist(rng);
-      const uint32_t n = graph.addNode(supply);
+      const LeyID n = graph.addNode(supply);
       if (!live.empty()) {
         graph.addLine(pickLive(rng), n, capDist(rng));
       }
@@ -194,16 +195,16 @@ TEST(NodeOps, RandomAddRemoveKeepsStructureConsistent) {
     } else if (roll < 7) {
       // split a random live internal or terminal line
       const auto &lines = graph.lines();
-      std::vector<uint32_t> aliveLines;
-      for (uint32_t e = 0; e < lines.size(); ++e) {
+      std::vector<LeyID> aliveLines;
+      for (LeyID e = 0; e < lines.size(); ++e) {
         if (lines[e].alive) {
           aliveLines.push_back(e);
         }
       }
       if (!aliveLines.empty()) {
-        const uint32_t e = aliveLines[std::uniform_int_distribution<size_t>(
+        const LeyID e = aliveLines[std::uniform_int_distribution<size_t>(
             0, aliveLines.size() - 1)(rng)];
-        const uint32_t mid = graph.splitLine(e, supplyDist(rng));
+        const LeyID mid = graph.splitLine(e, supplyDist(rng));
         if (mid != kNoNode) {
           live.push_back(mid);
         }
@@ -229,7 +230,7 @@ TEST(NodeOps, RandomAddRemoveKeepsStructureConsistent) {
   }
 
   // --- full invariant sweep at the end ---
-  for (uint32_t i = 0; i < graph.size(); ++i) {
+  for (LeyID i = 0; i < graph.size(); ++i) {
     if (!graph.nodes()[i].alive) {
       EXPECT_EQ(graph.nodes()[i].firstIncident, kNoLine)
           << "dead node " << i << " still lists lines";
@@ -238,7 +239,7 @@ TEST(NodeOps, RandomAddRemoveKeepsStructureConsistent) {
     EXPECT_EQ(graph.degree(i), countIncident(graph, i)) << "node " << i;
   }
   const auto &lines = graph.lines();
-  for (uint32_t e = 0; e < lines.size(); ++e) {
+  for (LeyID e = 0; e < lines.size(); ++e) {
     if (!lines[e].alive) {
       continue;
     }

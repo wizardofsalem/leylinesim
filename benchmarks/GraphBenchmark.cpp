@@ -1,3 +1,4 @@
+#include <leylib/LeyID.h>
 #include <cstddef>
 #include <cstdint>
 #include <random>
@@ -13,13 +14,13 @@ namespace {
 
 // Grow `g` to roughly `targetNodes` live nodes: random mix of new trees,
 // attached leaves (each with its own drain), and line splits.
-std::vector<uint32_t> growForest(LeyGraph &g, std::mt19937 &rng,
+std::vector<LeyID> growForest(LeyGraph &g, std::mt19937 &rng,
                                  std::size_t targetNodes) {
   std::normal_distribution<float> supply(0.0f, 300.0f);
   std::uniform_real_distribution<float> cap(5.0f, 500.0f);
 
-  std::vector<uint32_t> live;
-  for (uint32_t i = 0; i < g.size(); ++i) {
+  std::vector<LeyID> live;
+  for (LeyID i = 0; i < g.size(); ++i) {
     if (g.nodes()[i].alive) {
       live.push_back(i);
     }
@@ -28,23 +29,23 @@ std::vector<uint32_t> growForest(LeyGraph &g, std::mt19937 &rng,
   while (live.size() < targetNodes) {
     const int roll = std::uniform_int_distribution<int>(0, 3)(rng);
     if (roll == 0 || live.empty()) {
-      const uint32_t n = g.addNode(supply(rng));
+      const LeyID n = g.addNode(supply(rng));
       g.addTerminal(n, cap(rng));
       live.push_back(n);
     } else if (roll <= 2) {
-      const uint32_t p =
+      const LeyID p =
           live[std::uniform_int_distribution<size_t>(0, live.size() - 1)(rng)];
-      const uint32_t n = g.addNode(supply(rng));
+      const LeyID n = g.addNode(supply(rng));
       g.addLine(p, n, cap(rng));
       g.addTerminal(n, cap(rng));
       live.push_back(n);
     } else {
       const auto &lines = g.lines();
       for (int tries = 0; tries < 8 && !lines.empty(); ++tries) {
-        const uint32_t e =
-            std::uniform_int_distribution<uint32_t>(0, lines.size() - 1)(rng);
+        const LeyID e =
+            std::uniform_int_distribution<LeyID>(0, lines.size() - 1)(rng);
         if (lines[e].alive) {
-          const uint32_t mid = g.splitLine(e, supply(rng));
+          const LeyID mid = g.splitLine(e, supply(rng));
           if (mid != kNoNode) {
             live.push_back(mid);
           }
@@ -95,7 +96,7 @@ static void BM_MutateAndSolve(benchmark::State &state) {
   const auto nodeCount = static_cast<std::size_t>(state.range(0));
   std::mt19937 rng(0xBEEFu);
   LeyGraph graph(0, 0xBEEFu);
-  std::vector<uint32_t> live = growForest(graph, rng, nodeCount);
+  std::vector<LeyID> live = growForest(graph, rng, nodeCount);
 
   std::normal_distribution<float> supply(0.0f, 300.0f);
   std::uniform_real_distribution<float> cap(5.0f, 500.0f);
@@ -107,9 +108,9 @@ static void BM_MutateAndSolve(benchmark::State &state) {
          std::uniform_int_distribution<int>(0, 1)(rng) == 0);
 
     if (add) {
-      const uint32_t p =
+      const LeyID p =
           live[std::uniform_int_distribution<size_t>(0, live.size() - 1)(rng)];
-      const uint32_t n = graph.addNode(supply(rng));
+      const LeyID n = graph.addNode(supply(rng));
       graph.addLine(p, n, cap(rng));
       graph.addTerminal(n, cap(rng));
       live.push_back(n);

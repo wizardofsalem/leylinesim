@@ -1,3 +1,4 @@
+#include <leylib/LeyID.h>
 #include <gtest/gtest.h>
 #include <leylib/NodeIdGenerator.h>
 
@@ -10,8 +11,8 @@ TEST(NodeIdGenerator, GeneratesSequentialIdsFromZero) {
 
 TEST(NodeIdGenerator, ReusesFreedId) {
   NodeIdGenerator gen;
-  const uint32_t a = gen.generateId();
-  const uint32_t b = gen.generateId();
+  const LeyID a = gen.generateId();
+  const LeyID b = gen.generateId();
   (void)a;
 
   gen.freeId(b);
@@ -21,7 +22,7 @@ TEST(NodeIdGenerator, ReusesFreedId) {
 TEST(NodeIdGenerator, ContinuesAfterReuse) {
   NodeIdGenerator gen;
   gen.generateId();
-  const uint32_t one = gen.generateId();
+  const LeyID one = gen.generateId();
   gen.freeId(one);
   EXPECT_EQ(gen.generateId(), one);
   EXPECT_EQ(gen.generateId(), 2);

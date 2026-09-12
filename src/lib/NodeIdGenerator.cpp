@@ -1,8 +1,9 @@
+#include <leylib/LeyID.h>
 #include <leylib/NodeIdGenerator.h>
 
-uint32_t NodeIdGenerator::generateId() {
+LeyID NodeIdGenerator::generateId() {
   if (!availableIds_.empty()) {
-    uint32_t id = *availableIds_.begin();
+    LeyID id = *availableIds_.begin();
     availableIds_.erase(availableIds_.begin());
     return id;
   }
@@ -10,4 +11,4 @@ uint32_t NodeIdGenerator::generateId() {
   return highestId_++;
 }
 
-void NodeIdGenerator::freeId(uint32_t id) { availableIds_.insert(id); }
+void NodeIdGenerator::freeId(LeyID id) { availableIds_.insert(id); }

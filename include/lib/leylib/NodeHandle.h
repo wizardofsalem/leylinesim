@@ -1,7 +1,7 @@
 #pragma once
-#include <cstdint>
+#include "leylib/LeyID.h"
 
 struct NodeHandle {
-  uint32_t id;
+  LeyID id;
   uint32_t gen;
 };

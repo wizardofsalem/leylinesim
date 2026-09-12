@@ -1,3 +1,4 @@
+#include <leylib/LeyID.h>
 #include <gtest/gtest.h>
 
 #include <cstddef>
@@ -50,7 +51,7 @@ TEST(GraphGeneration, AllNodesAreAliveSourcesAtGenerationZero) {
 
 TEST(GraphGeneration, AllNodeIdsAreUnique) {
   LeyGraph graph(kTrees, kSeed);
-  std::unordered_set<uint32_t> seen;
+  std::unordered_set<LeyID> seen;
   for (const LeyNode &node : graph.nodes()) {
     EXPECT_TRUE(seen.insert(node.handle.id).second)
         << "duplicate id " << node.handle.id;
@@ -60,7 +61,7 @@ TEST(GraphGeneration, AllNodeIdsAreUnique) {
 TEST(GraphGeneration, EveryNodeHasItsOwnTerminal) {
   LeyGraph graph(kTrees, kSeed);
   const auto &lines = graph.lines();
-  for (uint32_t i = 0; i < graph.size(); ++i) {
+  for (LeyID i = 0; i < graph.size(); ++i) {
     EXPECT_EQ(graph.degree(i), 1u) << "node " << i;
     ASSERT_LT(i, lines.size());
     EXPECT_EQ(lines[i].aIndex, i);
