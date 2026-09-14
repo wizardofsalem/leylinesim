@@ -1,8 +1,13 @@
 #include "leylib/NodeHandle.h"
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <leylib/LeyID.h>
+#include <limits>
+#include <ortools/graph/max_flow.h>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include <leylib/FlowRndGenerator.h>
@@ -66,26 +71,78 @@ void LeyGraph::removeNode(LeyID nodeIndex) {}
 
 LeyID LeyGraph::splitLine(LeyID lineIndex, float supply) { return 0; }
 
+using Solver = operations_research::SimpleMaxFlow;
+constexpr long double kFlowScale = 1000.0L;
+
+Solver::FlowQuantity ToSolverQuantity(float value) {
+  const long double scaled =
+      std::floor(static_cast<long double>(value) * kFlowScale);
+
+  return static_cast<Solver::FlowQuantity>(scaled);
+}
+
+float FromSolverQuantity(Solver::FlowQuantity value) {
+  return static_cast<float>(static_cast<long double>(value) / kFlowScale);
+}
+
 void LeyGraph::solveFlow() {
-  std::set<LeyNode *, FlowComparator> sinkPriorityList{};
-  for (auto &node : graph_) {
-    if (node.supply < 0) {
-      sinkPriorityList.insert(&node);
+  Solver solver;
+  const auto superSource = static_cast<Solver::NodeIndex>(graph_.size());
+  const auto superSink = superSource + 1;
+
+  solver.AddArcWithCapacity(superSource, superSink, 0);
+  std::vector<Solver::ArcIndex> edgeArcs(edges_.size(), -1);
+  std::vector<Solver::ArcIndex> nodeArcs(graph_.size(), -1);
+  // Calculate total supply
+  // Add arcs with capacity from each node
+
+  // We add arcs to simulate sinks/supply nodes
+  // Calculate virtual edges
+  for (size_t i = 0; i < graph_.size(); ++i) {
+    const auto &node = graph_[i];
+
+    if (!node.alive)
+      continue;
+
+    const auto amount = ToSolverQuantity(std::abs(node.supply));
+
+    const auto index = static_cast<Solver::NodeIndex>(i);
+
+    if (node.supply > 0) {
+      nodeArcs[i] = solver.AddArcWithCapacity(superSource, index, amount);
+    } else if (node.supply < 0) {
+      nodeArcs[i] = solver.AddArcWithCapacity(index, superSink, amount);
     }
   }
 
-  for (auto sink : sinkPriorityList) {
-    for (auto connection : sink->connections) {
+  // Add the actual edges
+  for (size_t i = 0; i < edges_.size(); ++i) {
+    const auto &edge = edges_[i];
+    if (!edge.alive)
+      continue;
 
-      auto &edge = edges_[connection];
-      auto other = edge.aIndex == sink->handle.id ? edge.bIndex : edge.aIndex;
-      if (graph_[other].supply > 0) {
-        float edgeFlow = graph_[other].supply - abs(sink->supply) > 0
-                             ? abs(sink->supply)
-                             : graph_[other].supply;
+    if (!graph_[edge.aIndex].alive || !graph_[edge.bIndex].alive)
+      continue;
 
-        edge.flow = edgeFlow;
-      }
-    }
+    edgeArcs[i] =
+        solver.AddArcWithCapacity(static_cast<Solver::NodeIndex>(edge.aIndex),
+                                  static_cast<Solver::NodeIndex>(edge.bIndex),
+                                  ToSolverQuantity(edge.capacity));
   }
+
+  auto solveStatus = solver.Solve(superSource, superSink);
+
+  if (solveStatus != Solver::OPTIMAL) {
+    return;
+    // TODO add some logging
+  }
+
+  allocations_.assign(graph_.size(), 0.0f);
+
+  for (size_t i = 0; i < nodeArcs.size(); ++i)
+    if (nodeArcs[i] >= 0)
+      allocations_[i] = FromSolverQuantity(solver.Flow(nodeArcs[i]));
+  for (size_t i = 0; i < edges_.size(); ++i)
+    edges_[i].flow =
+        edgeArcs[i] >= 0 ? FromSolverQuantity(solver.Flow(edgeArcs[i])) : 0.0f;
 }
