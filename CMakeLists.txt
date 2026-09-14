@@ -16,8 +16,6 @@ set(LEYLINE_WARNINGS -Wall -Wextra -Wpedantic)
 
 option(LEYLINE_BUILD_TESTS "Build unit tests" ON)
 
-option(LEYLINE_BUILD_BENCHMARKS "Build benchmarks" OFF)
-
 add_executable(leyexe)
 target_sources(leyexe
   PRIVATE
@@ -25,7 +23,13 @@ target_sources(leyexe
 )
 target_include_directories(leyexe PRIVATE ./include/exe)
 
+if(EXISTS "${CMAKE_SOURCE_DIR}/build/deps/ortools")
+  list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/build/deps/ortools")
+endif()
+find_package(ortools CONFIG REQUIRED)
+
 add_library(leylib)
+target_link_libraries(leylib PRIVATE ortools::ortools)
 target_sources(leylib
   PRIVATE
   ./src/lib/LeyGraph.cpp
@@ -59,8 +63,4 @@ target_compile_options(leylib  PRIVATE ${LEYLINE_WARNINGS})
 if(LEYLINE_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
-endif()
-
-if(LEYLINE_BUILD_BENCHMARKS)
-  add_subdirectory(benchmarks)
 endif()
