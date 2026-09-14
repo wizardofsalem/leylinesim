@@ -2,8 +2,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <leylib/LeyID.h>
-#include <memory>
-#include <set>
 #include <vector>
 
 #include <leylib/LeyLine.h>
@@ -11,15 +9,6 @@
 #include <leylib/NodeIdGenerator.h>
 
 class FlowRndGenerator;
-
-struct FlowComparator {
-  bool operator()(const LeyNode *const nodeA, const LeyNode *const nodeB) const {
-    if (nodeA->supply != nodeB->supply) {
-      return nodeA->supply < nodeB->supply;
-    }
-    return nodeA->handle.id < nodeB->handle.id;
-  }
-};
 
 class LeyGraph {
 public:
@@ -34,7 +23,12 @@ public:
   void removeNode(LeyID nodeIndex);
   LeyID splitLine(LeyID lineIndex, float supply);
 
+  // Standard maximum flow, with no sink priority. Quantities are rounded down
+  // to 0.001 units. Throws for invalid inputs or an unsuccessful solver status.
   void solveFlow();
+  // Latest successful solve: source production, sink consumption, junction
+  // zero.
+  const std::vector<float> &allocations() const { return allocations_; }
 
   size_t size() const { return graph_.size(); }
   const std::vector<LeyNode> &nodes() const { return graph_; }
@@ -54,5 +48,5 @@ private:
   std::vector<LeyLine> edges_;
   std::vector<LeyID> freeLines_; // reusable slots in edges_
   NodeIdGenerator nodeIds_;      // slot allocator / free list for graph_
-  std::set<std::shared_ptr<LeyNode>, FlowComparator> sinkPriority_;
+  std::vector<float> allocations_;
 };
